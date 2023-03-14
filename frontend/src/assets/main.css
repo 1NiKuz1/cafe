@@ -1,1 +1,5 @@
 @import "./base.css";
+
+#app {
+  min-width: 320px;
+}
