@@ -10,12 +10,25 @@
 
 <script>
 import MegaMenu from "primevue/megamenu";
+import { useAuthStore } from "@/stores/auth";
+import { storeToRefs } from "pinia";
 export default {
   components: {
     MegaMenu,
   },
   setup() {
-    const items = [
+    const auth = useAuthStore();
+    const { isLogged } = storeToRefs(auth);
+    const { logout } = auth;
+
+    return {
+      isLogged,
+      logout
+    };
+  },
+  data() {
+    return {
+      items: [
       {
         label: "Сотрудники",
         to: "/employees",
@@ -31,19 +44,21 @@ export default {
       {
         label: "Вход",
         to: "/login",
+        visible: !this.isLogged,
       },
       {
         label: "Выход",
+        command: this.logout,
+        visible: this.isLogged,
       },
-    ];
-
-    return {
-      items,
+    ],
     };
   },
-  data() {
-    return {};
-  },
+  watch: {
+    isLogged(newVal, oldVal) {
+      location.reload()
+    }
+  }
 };
 </script>
 

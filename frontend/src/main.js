@@ -16,7 +16,7 @@ import PrimeVue from "primevue/config";
 import Toast from "primevue/toast";
 import ToastService from "primevue/toastservice";
 
-//import setupInterceptors from "./services/setupInterceptors";
+import setupInterceptors from "./services/setupInterceptors";
 
 const app = createApp(App);
 
@@ -28,4 +28,4 @@ app.use(ToastService);
 app.component("Toast", Toast);
 
 app.mount("#app");
-//setupInterceptors();
+setupInterceptors();

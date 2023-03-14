@@ -18,9 +18,15 @@ class UserController extends Controller
     public function index() {
         return UserResource::collection(User::all());
     }
-    public function show(User $user) {
-        // return $user;
-        return "One user ${user}";
+    public function show() {
+        $user = Auth::user();
+        return response()->json([
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role->name,
+            ]
+        ])->setStatusCode(200);
     }
 
     public function store(UserAddRequest $userRequest)
@@ -58,7 +64,10 @@ class UserController extends Controller
 
         return response()->json([
             'data' => [
-                'user_token' => $user->generateToken()
+                'user_token' => $user->generateToken(),
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role->name,
             ]
         ]);
     }

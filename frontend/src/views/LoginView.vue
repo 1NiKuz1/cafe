@@ -6,13 +6,13 @@
       class="form-container"
     >
       <div class="form-fields-wrapper">
-        <label for="email" class="form-label">E-mail</label>
+        <label for="login" class="form-label">Логин</label>
         <Field
-          name="email"
-          type="email"
+          name="login"
+          type="text"
           class="form-input p-inputtext p-component"
         />
-        <ErrorMessage name="email" class="form-error" />
+        <ErrorMessage name="login" class="form-error" />
       </div>
 
       <div class="form-fields-wrapper">
@@ -40,6 +40,7 @@
 import { Field, Form, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import Button from "primevue/button";
+import { useAuthStore } from "@/stores/auth";
 export default {
   components: {
     Field,
@@ -47,51 +48,50 @@ export default {
     ErrorMessage,
     Button,
   },
+  setup() {
+    const auth = useAuthStore();
+    const { login } = auth;
+    return {
+      login,
+    }
+  },
   data() {
-    return { errorMessage: "", isLoading: false };
+    return { serverError: "", isLoading: false };
   },
   computed: {
     schema() {
       return yup.object({
-        email: yup
+        login: yup
           .string()
           .trim()
-          .required("Обязательное поле")
-          .email("Не верный формат"),
-        password: yup.string().trim().min(8).required("Обязательное поле"),
+          .required("Обязательное поле"),
+        password: yup.string().trim().min(1).required("Обязательное поле"),
       });
     },
   },
   methods: {
     async handlSubmit(values) {
-      console.log(values);
       this.isLoading = true;
-      setTimeout(() => {
-        this.errorMessage = "Error: Database was not found";
+      try {
+        await this.login({ login: values.login, password: values.password });
+        this.showInfo();
+      } catch (error) {
+        this.serverError = error;
         this.showError();
-      }, 2000);
-
-      //try {
-      //  await this.login({ email: values.email, password: values.password });
-      //  this.$emit("hideDialog");
-      //} catch (error) {
-      //  this.errorMessage =
-      //    (error.response &&
-      //      error.response.data &&
-      //      error.response.data.message) ||
-      //    error.message ||
-      //    error.toString();
-      //  console.log(this.message);
-      //}
+      }
       this.isLoading = false;
     },
     showError() {
       this.$toast.add({
         severity: "error",
-        summary: "Error Message",
-        detail: this.errorMessage,
+        summary: "Error message",
+        detail: `Error code: ${this.serverError.code}
+        Message: ${this.serverError.message}`,
         life: 5000,
       });
+    },
+    showInfo() {
+        this.$toast.add({ severity: 'info', summary: 'Info Message', detail: 'User is authorized', life: 3000 });
     },
   },
 };

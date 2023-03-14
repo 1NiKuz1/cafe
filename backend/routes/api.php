@@ -17,6 +17,7 @@ use App\Http\Controllers\OrderController;
 |
 */
 
+Route::get('/current-user', [UserController::class, "show"]);
 Route::get('/logout', [UserController::class, "logout"]);
 Route::post('/login', [UserController::class, "login"])->withoutMiddleware(['auth:api']);
 
