@@ -1,17 +1,19 @@
-import { ref, computed, reactive, readonly } from 'vue'
-import { defineStore } from 'pinia'
-import TokenService from "@/services/token.service.js"
-import AuthService from "@/services/auth.service.js"
+import { ref, computed, reactive, readonly } from "vue";
+import { defineStore } from "pinia";
+import TokenService from "@/services/token.service.js";
+import AuthService from "@/services/auth.service.js";
 
-export const useAuthStore = defineStore('auth', () => {
-  let token = ref(TokenService.getToken() ?? null);
-  let user = readonly({token});
-  let isLogged = ref(user.token ? true : false);
+export const useAuthStore = defineStore("auth", () => {
+  // Проверить работу ствойства
+  let _user = reactive(JSON.parse(localStorage.getItem("user")));
+  let user = readonly(_user);
+  let isLogged = ref(user ? true : false);
 
   async function login(user) {
     try {
       const res = await AuthService.login(user);
-      token.value = TokenService.getToken();
+      // Протестировать реактивность
+      _user = JSON.parse(localStorage.getItem("user"));
       isLogged.value = true;
       return res;
     } catch (error) {
@@ -29,5 +31,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { isLogged, user, login, logout }
-})
+  return { isLogged, user, login, logout };
+});

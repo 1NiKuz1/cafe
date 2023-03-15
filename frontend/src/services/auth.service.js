@@ -1,28 +1,26 @@
 import api from "./api.js";
-import TokenService from "./token.service.js"
+import TokenService from "./token.service.js";
 
 class AuthService {
-  async login({login, password}) {
+  async login({ login, password }) {
     try {
-      const res = await api.post("/login", {login, password});
-      console.log(res.data.data.user_token)
-      // TokenService.setUser(res.data.data);
+      const res = await api.post("/login", { login, password });
+      // Проверить созданного юзера
+      TokenService.setUser(res.data.data);
       return res.data.data;
-    } catch(error) {
+    } catch (error) {
       return Promise.reject(error?.response?.data?.error);
     }
-    
   }
 
   async logout() {
     try {
       const res = await api.get("/logout");
-      TokenService.removeUser()
+      TokenService.removeUser();
       return res.data;
-    } catch(error) {
+    } catch (error) {
       return Promise.reject(error);
     }
-    
   }
 }
 
