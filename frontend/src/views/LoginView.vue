@@ -33,7 +33,7 @@
       />
     </Form>
   </div>
-  <Toast class="p-toast-bottom-right" />
+  <Toast />
 </template>
 
 <script>
@@ -53,7 +53,7 @@ export default {
     const { login } = auth;
     return {
       login,
-    }
+    };
   },
   data() {
     return { serverError: "", isLoading: false };
@@ -61,10 +61,7 @@ export default {
   computed: {
     schema() {
       return yup.object({
-        login: yup
-          .string()
-          .trim()
-          .required("Обязательное поле"),
+        login: yup.string().trim().required("Обязательное поле"),
         password: yup.string().trim().min(1).required("Обязательное поле"),
       });
     },
@@ -74,7 +71,6 @@ export default {
       this.isLoading = true;
       try {
         await this.login({ login: values.login, password: values.password });
-        this.showInfo();
       } catch (error) {
         this.serverError = error;
         this.showError();
@@ -89,9 +85,6 @@ export default {
         Message: ${this.serverError.message}`,
         life: 5000,
       });
-    },
-    showInfo() {
-        this.$toast.add({ severity: 'info', summary: 'Info Message', detail: 'User is authorized', life: 3000 });
     },
   },
 };

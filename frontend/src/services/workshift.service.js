@@ -10,6 +10,15 @@ class WorkShiftService {
     }
   }
 
+  async showAllWorkShifts() {
+    try {
+      const res = await api.get("/work-shift");
+      return res.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   async openWorkShift(id) {
     try {
       const res = await api.get(`/work-shift/${id}/open`);

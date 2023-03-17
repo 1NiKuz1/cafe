@@ -112,4 +112,9 @@ class WorkShiftController extends Controller
             ]
         ])->setStatusCode(201, 'Added');
     }
+
+    public function showAll() {
+        $workShifts = WorkShift::all();
+        return WorkShiftAllResource::collection($workShifts);
+    }
 }

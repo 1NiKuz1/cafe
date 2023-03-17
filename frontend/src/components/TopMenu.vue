@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <MegaMenu :model="items">
+    <MegaMenu :model="menuItems">
       <template #start>
         <p @click="$router.push('/')" class="logo">Cafe</p>
       </template>
@@ -18,47 +18,94 @@ export default {
   },
   setup() {
     const auth = useAuthStore();
+    const { userData } = auth;
     const { isLogged } = storeToRefs(auth);
     const { logout } = auth;
 
     return {
       isLogged,
-      logout
+      logout,
+      userData,
     };
   },
   data() {
     return {
-      items: [
-      {
-        label: "Сотрудники",
-        to: "/employees",
-      },
-      {
-        label: "Смены",
-        to: "/shifts",
-      },
-      {
-        label: "Заказы",
-        to: "/orders",
-      },
-      {
-        label: "Вход",
-        to: "/login",
-        visible: !this.isLogged,
-      },
-      {
-        label: "Выход",
-        command: this.logout,
-        visible: this.isLogged,
-      },
-    ],
+      menuItems: [
+        {
+          label: "Сотрудники",
+          to: "/employees",
+          visible: false,
+        },
+        {
+          label: "Смены",
+          to: "/shifts",
+          visible: false,
+        },
+        {
+          label: "Заказы",
+          to: "/orders",
+          visible: false,
+        },
+        {
+          label: "Вход",
+          to: "/login",
+          visible: !this.isLogged,
+        },
+        {
+          label: "Выход",
+          command: this.logout,
+          visible: this.isLogged,
+        },
+      ],
     };
+  },
+  mounted() {
+    this.createListMenu();
   },
   watch: {
     isLogged(newVal, oldVal) {
-      location.reload()
-    }
-  }
+      this.createListMenu();
+      this.$router.push("/");
+    },
+  },
+  methods: {
+    createListMenu() {
+      this.menuItems.forEach((el) => {
+        if (!this.isLogged) {
+          switch (el.label) {
+            case "Вход":
+              el.visible = true;
+              break;
+            case "Выход":
+              el.visible = false;
+              break;
+            default:
+              el.visible = false;
+          }
+          return;
+        }
+        if (this.userData.user.role === "Администратор") {
+          switch (el.label) {
+            case "Сотрудники":
+              el.visible = true;
+              break;
+            case "Смены":
+              el.visible = true;
+              break;
+            case "Заказы":
+              el.visible = true;
+              break;
+            case "Вход":
+              el.visible = false;
+              break;
+            case "Выход":
+              el.visible = true;
+              break;
+          }
+        }
+      });
+    },
+  },
 };
 </script>
 

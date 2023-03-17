@@ -1,103 +1,81 @@
 <template>
   <div class="card-wrapper">
-    <Card v-for="shift in shifts" :key="shift.id" class="shift-card">
-      <template #title>{{ shift.title }}</template>
-      <template #content>
-        <ul>
-          <li>Начало смены: {{ shift.start }}</li>
-          <li>Конец смены: {{ shift.end }}</li>
-          <li>Статус: {{ shift.status }}</li>
-        </ul>
-      </template>
-      <template #footer>
-        <Button icon="pi pi-cog" label="Edit" />
-      </template>
-    </Card>
+    <template v-if="isLoading">
+      <Card v-for="shift in shifts" :key="shift.id" class="shift-card">
+        <template #title>{{ shift.title }}</template>
+        <template #content>
+          <ul>
+            <li>Начало смены:</li>
+            <li>{{ shift.start }}</li>
+            <li>Конец смены:</li>
+            <li>{{ shift.end }}</li>
+            <li>Статус: {{ shift.status }}</li>
+          </ul>
+        </template>
+        <template #footer>
+          <Button icon="pi pi-cog" label="Edit" />
+        </template>
+      </Card>
+    </template>
+    <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
+  <Toast />
 </template>
 
 <script>
 import Card from "primevue/card";
 import Button from "primevue/button";
-import { ref, reactive } from "vue";
+import ProgressSpinner from "primevue/progressspinner";
+import WorkShiftService from "@/services/workshift.service.js";
+import { useAuthStore } from "@/stores/auth";
+import { ref, reactive, toRefs } from "vue";
 export default {
   components: {
     Card,
     Button,
+    ProgressSpinner,
   },
   setup() {
-    const shifts = reactive([
-      {
-        id: 1,
-        title: "Смена 1",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 2,
-        title: "Смена 2",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 3,
-        title: "Смена 3",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 4,
-        title: "Смена 4",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 5,
-        title: "Смена 5",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 6,
-        title: "Смена 6",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 7,
-        title: "Смена 7",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 8,
-        title: "Смена 8",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-      {
-        id: 9,
-        title: "Смена 9",
-        start: "2021-09-19 08:00",
-        end: "2021-09-19 18:00",
-        status: "Открыта",
-      },
-    ]);
-
+    const auth = useAuthStore();
+    const { userData } = auth;
     return {
-      shifts,
+      userData,
     };
   },
   data() {
-    return {};
+    return {
+      shifts: [],
+      isLoading: false,
+    };
+  },
+  mounted() {
+    if (this.userData.user.role != "Администратор") {
+      this.$router.push("/");
+      return;
+    }
+    WorkShiftService.showAllWorkShifts()
+      .then((res) => {
+        res.forEach((el) => {
+          el.title = `Смена ${el.id}`;
+          el.status = el.active ? "Активна" : "Не активна";
+        });
+        this.shifts = res;
+        this.isLoading = true;
+      })
+      .catch((err) => {
+        this.showError(err);
+      });
+  },
+  methods: {
+    showError(err) {
+      this.$toast.add({
+        severity: "error",
+        summary: "Error message",
+        detail: `Error code: ${err.code}
+        Message: ${err.message}`,
+        life: 5000,
+      });
+    },
   },
 };
 </script>
@@ -121,6 +99,13 @@ ul {
 .shift-card {
   flex: 1 0 280px;
   max-width: 330px;
+}
+
+.progress-spiner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 @media (max-width: 620px) {

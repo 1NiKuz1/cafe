@@ -10,7 +10,7 @@ class WorkShift extends Model
     use HasFactory;
 
     protected $fillable = [
-        'start', 'end', 'active'
+        'id', 'start', 'end', 'active'
     ];
 
     public function UserShiftWorker()

@@ -4,7 +4,7 @@ class UserService {
   async getUsers() {
     try {
       const res = await api.get("/user");
-      return res.data;
+      return res.data.details;
     } catch (error) {
       return Promise.reject(error);
     }

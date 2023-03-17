@@ -37,6 +37,7 @@ Route::prefix('work-shift')->group(function() {
     });
     Route::middleware('role:admin|waiter')->group(function() {
         Route::get('/{workShift}/order', [WorkShiftController::class, "show"]);
+        Route::get('/', [WorkShiftController::class, "showAll"]);
     });
 });
 
