@@ -13,6 +13,7 @@ import MegaMenu from "primevue/megamenu";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
 export default {
+  name: "TopMenu",
   components: {
     MegaMenu,
   },

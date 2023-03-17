@@ -10,10 +10,8 @@
         <template #content>
           <ul>
             <li>Статус: {{ employee.status }}</li>
+            <li>Должность: {{ employee.group }}</li>
           </ul>
-        </template>
-        <template #footer>
-          <Button icon="pi pi-cog" label="Edit" />
         </template>
       </Card>
     </template>

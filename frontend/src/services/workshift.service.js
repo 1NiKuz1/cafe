@@ -3,10 +3,12 @@ import api from "./api.js";
 class WorkShiftService {
   async createWorkShift({ start, end }) {
     try {
+      //console.log(start);
       const res = await api.post("/work-shift", { start, end });
       return res.data.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 

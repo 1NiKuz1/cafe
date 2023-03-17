@@ -1,5 +1,10 @@
 <template>
-  <Button  label="Добавить новую смену" class="add-user-button"  />
+  <Button
+    v-if="isLoading"
+    label="Добавить новую смену"
+    class="add-user-button"
+    @click="isShowAddNewShiftDialog = true"
+  />
   <div class="card-wrapper">
     <template v-if="isLoading">
       <Card v-for="shift in shifts" :key="shift.id" class="shift-card">
@@ -14,13 +19,38 @@
           </ul>
         </template>
         <template #footer>
-          <Button  label="Добавить" style="margin-right: 10px;" />
-          <Button v-if="shift.active" @click="closeWorkShift(shift.id)" severity="danger" label="Закрыть" />
-          <Button v-else :disabled="isAllClose" @click="openWorkShift(shift.id)" severity="success" label="Открыть" />
+          <Button label="Добавить" style="margin-right: 10px" />
+          <Button
+            v-if="shift.active"
+            @click="changeStatusWorkShift(shift.id, false)"
+            severity="danger"
+            label="Закрыть"
+          />
+          <Button
+            v-else
+            :disabled="isShiftOpen"
+            @click="changeStatusWorkShift(shift.id, true)"
+            severity="success"
+            label="Открыть"
+          />
         </template>
       </Card>
     </template>
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
+    <Dialog
+      v-model:visible="isShowAddNewShiftDialog"
+      modal
+      header="Добавление новой смены"
+    >
+      <WorkShiftAddNew @addNewShift="loadShidts()" />
+    </Dialog>
+    <Dialog
+      v-model:visible="isShowAddNewUserDialog"
+      modal
+      header="Добавление нового пользователя на смену"
+    >
+      <WorkShiftAddNew />
+    </Dialog>
   </div>
   <Toast />
 </template>
@@ -29,7 +59,10 @@
 import Card from "primevue/card";
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
+import Dialog from "primevue/dialog";
+import WorkShiftAddNew from "@/components/WorkShiftAddNew.vue";
 import WorkShiftService from "@/services/workshift.service.js";
+import useShowError from "../composables/useShowError.js";
 import { useAuthStore } from "@/stores/auth";
 import { ref, reactive, toRefs } from "vue";
 
@@ -38,6 +71,8 @@ export default {
     Card,
     Button,
     ProgressSpinner,
+    Dialog,
+    WorkShiftAddNew,
   },
 
   setup() {
@@ -52,7 +87,9 @@ export default {
     return {
       shifts: [],
       isLoading: false,
-      isAllClose: false,
+      isShiftOpen: false,
+      isShowAddNewShiftDialog: false,
+      isShowAddNewUserDialog: false,
     };
   },
 
@@ -61,68 +98,53 @@ export default {
       this.$router.push("/");
       return;
     }
-
-    WorkShiftService.showAllWorkShifts()
-      .then((res) => {
-        res.forEach((el) => {
-          el.title = `Смена ${el.id}`;
-          el.status = el.active ? "Активна" : "Не активна";
-        });
-        this.checkShiftsForOpenness();
-        this.shifts = res;
-        this.isLoading = true;
-      })
-      .catch((err) => {
-        this.showError(err);
-      });
+    this.loadShidts();
   },
 
   methods: {
     showError(err) {
-      this.$toast.add({
-        severity: "error",
-        summary: "Error message",
-        detail: `Error code: ${err.code}
-        Message: ${err.message}`,
-        life: 5000,
-      });
+      useShowError(err, this);
     },
 
-    closeWorkShift(id) {
-      WorkShiftService.closeWorkShift(id).then(() => {
-        this.shifts.forEach(el => {
-          if (el.id === id) {
-            el.active = 0;
-            el.status = "Не активна";
-          }
+    loadShidts() {
+      WorkShiftService.showAllWorkShifts()
+        .then((res) => {
+          res.forEach((el) => {
+            el.title = `Смена ${el.id}`;
+            el.status = el.active ? "Активна" : "Не активна";
+          });
+          this.shifts = res;
+          this.isLoading = true;
+          this.checkShiftsForOpenness();
         })
-        this.checkShiftsForOpenness();
-      }).catch(err => this.showError(err));
+        .catch((err) => {
+          this.showError(err);
+        });
     },
 
-    async openWorkShift(id) {
+    async changeStatusWorkShift(id, status) {
       try {
-        WorkShiftService.openWorkShift(id);
-        this.shifts.forEach(el => {
+        if (status) await WorkShiftService.openWorkShift(id);
+        else await WorkShiftService.closeWorkShift(id);
+        this.shifts.forEach((el) => {
           if (el.id === id) {
-            el.active = 1;
-            el.status = "Активна";
+            el.active = status;
+            el.status = status ? "Активна" : "Не активна";
           }
-        })
+        });
         this.checkShiftsForOpenness();
-      } catch(err) {
-        this.showError(err)
+      } catch (err) {
+        this.showError(err);
       }
     },
 
     checkShiftsForOpenness() {
       let isActive = false;
-      this.shifts.forEach(el => {
+      this.shifts.forEach((el) => {
         if (el.active) isActive = true;
-      })
-      console.log(this.shifts)
-      this.isAllClose = isActive;
-    }
+      });
+      this.isShiftOpen = isActive;
+    },
   },
 };
 </script>
