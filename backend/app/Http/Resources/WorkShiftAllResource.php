@@ -12,7 +12,7 @@ class WorkShiftAllResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
+    public function toArray($request)
     {
         self::$wrap = null;
         return [

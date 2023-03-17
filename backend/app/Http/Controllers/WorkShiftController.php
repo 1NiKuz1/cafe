@@ -7,6 +7,7 @@ use App\Http\Requests\CloseRequest;
 use App\Http\Requests\OpenRequest;
 use App\Http\Requests\WorkShiftRequest;
 use App\Http\Resources\WorkShiftResource;
+use App\Http\Resources\WorkShiftAllResource;
 use App\Models\ShiftWorker;
 use App\Models\WorkShift;
 use Illuminate\Http\Request;

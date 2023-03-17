@@ -1,4 +1,5 @@
 <template>
+  <Button  label="Добавить новую смену" class="add-user-button"  />
   <div class="card-wrapper">
     <template v-if="isLoading">
       <Card v-for="shift in shifts" :key="shift.id" class="shift-card">
@@ -13,7 +14,9 @@
           </ul>
         </template>
         <template #footer>
-          <Button icon="pi pi-cog" label="Edit" />
+          <Button  label="Добавить" style="margin-right: 10px;" />
+          <Button v-if="shift.active" @click="closeWorkShift(shift.id)" severity="danger" label="Закрыть" />
+          <Button v-else :disabled="isAllClose" @click="openWorkShift(shift.id)" severity="success" label="Открыть" />
         </template>
       </Card>
     </template>
@@ -29,12 +32,14 @@ import ProgressSpinner from "primevue/progressspinner";
 import WorkShiftService from "@/services/workshift.service.js";
 import { useAuthStore } from "@/stores/auth";
 import { ref, reactive, toRefs } from "vue";
+
 export default {
   components: {
     Card,
     Button,
     ProgressSpinner,
   },
+
   setup() {
     const auth = useAuthStore();
     const { userData } = auth;
@@ -42,23 +47,28 @@ export default {
       userData,
     };
   },
+
   data() {
     return {
       shifts: [],
       isLoading: false,
+      isAllClose: false,
     };
   },
+
   mounted() {
     if (this.userData.user.role != "Администратор") {
       this.$router.push("/");
       return;
     }
+
     WorkShiftService.showAllWorkShifts()
       .then((res) => {
         res.forEach((el) => {
           el.title = `Смена ${el.id}`;
           el.status = el.active ? "Активна" : "Не активна";
         });
+        this.checkShiftsForOpenness();
         this.shifts = res;
         this.isLoading = true;
       })
@@ -66,6 +76,7 @@ export default {
         this.showError(err);
       });
   },
+
   methods: {
     showError(err) {
       this.$toast.add({
@@ -76,6 +87,42 @@ export default {
         life: 5000,
       });
     },
+
+    closeWorkShift(id) {
+      WorkShiftService.closeWorkShift(id).then(() => {
+        this.shifts.forEach(el => {
+          if (el.id === id) {
+            el.active = 0;
+            el.status = "Не активна";
+          }
+        })
+        this.checkShiftsForOpenness();
+      }).catch(err => this.showError(err));
+    },
+
+    async openWorkShift(id) {
+      try {
+        WorkShiftService.openWorkShift(id);
+        this.shifts.forEach(el => {
+          if (el.id === id) {
+            el.active = 1;
+            el.status = "Активна";
+          }
+        })
+        this.checkShiftsForOpenness();
+      } catch(err) {
+        this.showError(err)
+      }
+    },
+
+    checkShiftsForOpenness() {
+      let isActive = false;
+      this.shifts.forEach(el => {
+        if (el.active) isActive = true;
+      })
+      console.log(this.shifts)
+      this.isAllClose = isActive;
+    }
   },
 };
 </script>
@@ -104,6 +151,12 @@ ul {
 .progress-spiner {
   position: absolute;
   top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.add-user-button {
+  margin-top: 20px;
   left: 50%;
   transform: translateX(-50%);
 }
