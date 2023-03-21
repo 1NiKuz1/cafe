@@ -2,7 +2,7 @@
   <Button
     v-if="isLoading"
     label="Добавить новую смену"
-    class="add-user-button"
+    class="add-shift-button"
     @click="isShowAddNewShiftDialog = true"
   />
   <div class="card-wrapper">
@@ -19,7 +19,11 @@
           </ul>
         </template>
         <template #footer>
-          <Button label="Добавить" style="margin-right: 10px" />
+          <Button
+            label="Добавить"
+            style="margin-right: 10px"
+            @click="handleAddEmployeeDialog(shift.id)"
+          />
           <Button
             v-if="shift.active"
             @click="changeStatusWorkShift(shift.id, false)"
@@ -42,14 +46,14 @@
       modal
       header="Добавление новой смены"
     >
-      <WorkShiftAddNew @addNewShift="loadShidts()" />
+      <AddNewWorkShift @addNewShift="handleAddNewShift" />
     </Dialog>
     <Dialog
       v-model:visible="isShowAddNewUserDialog"
       modal
       header="Добавление нового пользователя на смену"
     >
-      <WorkShiftAddNew />
+      <AddEmployeeOnWorkShift :idShift="selectedShift" />
     </Dialog>
   </div>
   <Toast />
@@ -60,11 +64,11 @@ import Card from "primevue/card";
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 import Dialog from "primevue/dialog";
-import WorkShiftAddNew from "@/components/WorkShiftAddNew.vue";
+import AddNewWorkShift from "@/components/AddNewWorkShift.vue";
+import AddEmployeeOnWorkShift from "@/components/AddEmployeeOnWorkShift.vue";
 import WorkShiftService from "@/services/workshift.service.js";
-import useShowError from "../composables/useShowError.js";
+import useShowError from "@/composables/useShowError.js";
 import { useAuthStore } from "@/stores/auth";
-import { ref, reactive, toRefs } from "vue";
 
 export default {
   components: {
@@ -72,7 +76,8 @@ export default {
     Button,
     ProgressSpinner,
     Dialog,
-    WorkShiftAddNew,
+    AddNewWorkShift,
+    AddEmployeeOnWorkShift,
   },
 
   setup() {
@@ -86,6 +91,7 @@ export default {
   data() {
     return {
       shifts: [],
+      selectedShift: null,
       isLoading: false,
       isShiftOpen: false,
       isShowAddNewShiftDialog: false,
@@ -98,7 +104,7 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadShidts();
+    this.loadShifts();
   },
 
   methods: {
@@ -106,7 +112,17 @@ export default {
       useShowError(err, this);
     },
 
-    loadShidts() {
+    handleAddEmployeeDialog(shiftId) {
+      this.selectedShift = shiftId;
+      this.isShowAddNewUserDialog = true;
+    },
+
+    handleAddNewShift() {
+      this.loadShifts();
+      this.isShowAddNewShiftDialog = false;
+    },
+
+    loadShifts() {
       WorkShiftService.showAllWorkShifts()
         .then((res) => {
           res.forEach((el) => {
@@ -177,7 +193,7 @@ ul {
   transform: translateX(-50%);
 }
 
-.add-user-button {
+.add-shift-button {
   margin-top: 20px;
   left: 50%;
   transform: translateX(-50%);

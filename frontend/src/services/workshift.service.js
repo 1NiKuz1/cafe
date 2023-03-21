@@ -3,7 +3,6 @@ import api from "./api.js";
 class WorkShiftService {
   async createWorkShift({ start, end }) {
     try {
-      //console.log(start);
       const res = await api.post("/work-shift", { start, end });
       return res.data.data;
     } catch (error) {
@@ -39,12 +38,13 @@ class WorkShiftService {
     }
   }
 
-  async addUserOnWorkShift({ id, user_id }) {
+  async addUserOnWorkShift(id, user_id) {
     try {
       const res = await api.post(`/work-shift/${id}/user`, { user_id });
       return res.data.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 
@@ -53,7 +53,8 @@ class WorkShiftService {
       const res = await api.get(`/work-shift/${id}/order`);
       return res.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 }

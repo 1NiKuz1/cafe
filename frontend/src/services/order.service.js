@@ -24,7 +24,8 @@ class OrderService {
       const res = await api.get(`order/${id}`);
       return res.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 

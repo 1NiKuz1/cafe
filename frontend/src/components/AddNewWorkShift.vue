@@ -33,22 +33,13 @@ import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 import WorkShiftService from "@/services/workshift.service.js";
 import useShowError from "../composables/useShowError.js";
-import { useAuthStore } from "@/stores/auth";
-import { storeToRefs } from "pinia";
+
 export default {
-  name: "WorkShiftAddNew",
+  name: "AddNewWorkShift",
   emits: ["addNewShift"],
   components: {
     Calendar,
     Button,
-  },
-  setup() {
-    const auth = useAuthStore();
-    const { userData } = auth;
-
-    return {
-      userData,
-    };
   },
   data() {
     return {
@@ -62,9 +53,9 @@ export default {
       useShowError(err, this);
     },
     async addNewShift() {
+      this.isLoading = true;
       try {
-        this.isLoading = true;
-        if (this.dateStart && this.dateEnd)
+        if (this.dateStart && this.dateEnd) {
           await WorkShiftService.createWorkShift({
             start: `${this.dateStart.getFullYear()}-${
               this.dateStart.getMonth() > 8
@@ -77,14 +68,14 @@ export default {
                 : "0" + (this.dateEnd.getMonth() + 1)
             }-${this.dateEnd.getDate()} ${this.dateEnd.getHours()}:${this.dateEnd.getMinutes()}`,
           });
-        else this.showError(new Error("Должны быть заполнены все поля"));
-
-        this.isLoading = false;
-        this.$emit("addNewShift");
+          this.$emit("addNewShift");
+        } else {
+          this.showError(new Error("Заполните дату начала и окончания смены"));
+        }
       } catch (err) {
         this.showError(err);
-        this.isLoading = false;
       }
+      this.isLoading = false;
     },
   },
 };
@@ -93,7 +84,6 @@ export default {
 <style scoped>
 form {
   display: flex;
-  align-items: start;
   flex-direction: column;
 }
 .from-label {
@@ -103,6 +93,7 @@ form {
   margin-bottom: 10px;
 }
 .from-button {
+  align-self: flex-start;
   margin-top: 20px;
 }
 </style>

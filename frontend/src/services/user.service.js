@@ -6,33 +6,40 @@ class UserService {
       const res = await api.get("/user");
       return res.data.details;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 
-  async createUser({
-    name,
-    surname,
-    patronymic,
-    login,
-    password,
-    photo_file,
-    role_id,
-  }) {
+  async createUser({ name, login, password, file, role_id }) {
     try {
       const res = await api.post("/user", {
         name,
-        surname,
-        patronymic,
         login,
         password,
-        photo_file,
         role_id,
       });
       return res.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
+    //const reader = new FileReader();
+    //reader.readAsDataURL(file);
+    //reader.onload = async () => {
+    //  try {
+    //    const res = await api.post("/user", {
+    //      name,
+    //      login,
+    //      password,
+    //      photo_file: reader.result,
+    //      role_id,
+    //    });
+    //    return res.data;
+    //  } catch (error) {
+    //    return Promise.reject(error);
+    //  }
+    //};
   }
 }
 

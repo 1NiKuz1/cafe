@@ -1,4 +1,10 @@
 <template>
+  <Button
+    v-if="isLoading"
+    label="Добавить нового пользователя"
+    class="add-user-button"
+    @click="isShowAddNewUserDialog = true"
+  />
   <div class="card-wrapper">
     <template v-if="isLoading">
       <Card
@@ -16,6 +22,13 @@
       </Card>
     </template>
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
+    <Dialog
+      v-model:visible="isShowAddNewUserDialog"
+      modal
+      header="Добавление новой смены"
+    >
+      <AddNewEmployee @addNewEmployee="handleAddNewEmployee" />
+    </Dialog>
   </div>
   <Toast />
 </template>
@@ -24,7 +37,8 @@
 import Card from "primevue/card";
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
-import { ref, reactive } from "vue";
+import Dialog from "primevue/dialog";
+import AddNewEmployee from "@/components/AddNewEmployee.vue";
 import UserService from "@/services/user.service.js";
 import { useAuthStore } from "@/stores/auth";
 export default {
@@ -32,6 +46,8 @@ export default {
     Card,
     Button,
     ProgressSpinner,
+    Dialog,
+    AddNewEmployee,
   },
   setup() {
     const auth = useAuthStore();
@@ -44,6 +60,7 @@ export default {
     return {
       employees: [],
       isLoading: false,
+      isShowAddNewUserDialog: false,
     };
   },
   mounted() {
@@ -51,16 +68,25 @@ export default {
       this.$router.push("/");
       return;
     }
-    UserService.getUsers()
-      .then((res) => {
-        this.employees = res;
-        this.isLoading = true;
-      })
-      .catch((err) => {
-        this.showError(err);
-      });
+    this.loadEmployess();
   },
   methods: {
+    handleAddNewEmployee() {
+      this.loadEmployess();
+      this.isShowAddNewUserDialog = false;
+    },
+
+    loadEmployess() {
+      UserService.getUsers()
+        .then((res) => {
+          this.employees = res;
+          this.isLoading = true;
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
+    },
+
     showError(err) {
       this.$toast.add({
         severity: "error",
@@ -99,6 +125,12 @@ ul {
 .progress-spiner {
   position: absolute;
   top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.add-user-button {
+  margin-top: 20px;
   left: 50%;
   transform: translateX(-50%);
 }

@@ -1,12 +1,20 @@
 <template>
+  <Dropdown
+    name="shifts"
+    v-model="selectedShift"
+    :options="shifts"
+    optionLabel="title"
+    placeholder="Выбор смены"
+    class="w-full md:w-14rem add-shift-drop"
+  />
   <div class="card-wrapper">
     <Card v-for="order in orders" :key="order.id" class="order-card">
-      <template #title>{{ order.title }}</template>
+      <template #title>{{ order.table }}</template>
       <template #content>
         <ul>
-          <li>Официант: {{ order.server }}</li>
+          <li>Официант: {{ order.shift_workers }}</li>
           <li>Статус: {{ order.status }}</li>
-          <li>Цена: {{ order.ptice }}</li>
+          <li>Цена: {{ order.price }}</li>
         </ul>
       </template>
       <template #footer>
@@ -14,90 +22,68 @@
       </template>
     </Card>
   </div>
+  <Toast />
 </template>
 
 <script>
 import Card from "primevue/card";
 import Button from "primevue/button";
-import { ref, reactive } from "vue";
+import Dropdown from "primevue/dropdown";
+import WorkShiftService from "@/services/workshift.service.js";
+import useShowError from "@/composables/useShowError.js";
+
 export default {
   components: {
     Card,
     Button,
+    Dropdown,
   },
-  setup() {
-    const orders = reactive([
-      {
-        id: 1,
-        title: "Столик 1",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 2,
-        title: "Столик 2",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 3,
-        title: "Столик 3",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 4,
-        title: "Столик 4",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 5,
-        title: "Столик 5",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 6,
-        title: "Столик 6",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 7,
-        title: "Столик 7",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 8,
-        title: "Столик 8",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-      {
-        id: 9,
-        title: "Столик 9",
-        server: "Jhon",
-        status: "Отмена",
-        price: 9238,
-      },
-    ]);
 
+  data() {
     return {
-      orders,
+      orders: null,
+      shifts: null,
+      selectedShift: null,
     };
   },
-  data() {
-    return {};
+
+  mounted() {
+    this.loadShifts();
+  },
+
+  methods: {
+    showError(err) {
+      useShowError(err, this);
+    },
+
+    loadShifts() {
+      WorkShiftService.showAllWorkShifts()
+        .then((res) => {
+          res.forEach((el) => {
+            el.title = `Смена ${el.id}`;
+          });
+          this.shifts = res;
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
+    },
+
+    loadOrders(id) {
+      WorkShiftService.showOrderByWorkShift(id)
+        .then((res) => {
+          console.log(res[0].orders);
+          this.orders = res[0].orders;
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
+    },
+  },
+  watch: {
+    selectedShift(newVal, oldVal) {
+      this.loadOrders(newVal.id);
+    },
   },
 };
 </script>
@@ -121,6 +107,12 @@ ul {
 .order-card {
   flex: 1 0 200px;
   max-width: 250px;
+}
+
+.add-shift-drop {
+  margin-top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 @media (max-width: 460px) {
