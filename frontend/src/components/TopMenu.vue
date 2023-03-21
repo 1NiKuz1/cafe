@@ -12,11 +12,13 @@
 import MegaMenu from "primevue/megamenu";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
+
 export default {
   name: "TopMenu",
   components: {
     MegaMenu,
   },
+
   setup() {
     const auth = useAuthStore();
     const { userData } = auth;
@@ -29,6 +31,7 @@ export default {
       userData,
     };
   },
+
   data() {
     return {
       menuItems: [
@@ -48,6 +51,21 @@ export default {
           visible: false,
         },
         {
+          label: "Обработка заказов",
+          to: "/shift-orders",
+          visible: false,
+        },
+        {
+          label: "Заказы за смену",
+          to: "/orders-for-shift",
+          visible: false,
+        },
+        {
+          label: "Заказы активной смены",
+          to: "/orders-for-active-shift",
+          visible: false,
+        },
+        {
           label: "Вход",
           to: "/login",
           visible: !this.isLogged,
@@ -60,15 +78,18 @@ export default {
       ],
     };
   },
+
   mounted() {
     this.createListMenu();
   },
+
   watch: {
-    isLogged(newVal, oldVal) {
+    isLogged() {
       this.createListMenu();
       this.$router.push("/");
     },
   },
+
   methods: {
     createListMenu() {
       this.menuItems.forEach((el) => {
@@ -94,6 +115,35 @@ export default {
               el.visible = true;
               break;
             case "Заказы":
+              el.visible = true;
+              break;
+            case "Вход":
+              el.visible = false;
+              break;
+            case "Выход":
+              el.visible = true;
+              break;
+          }
+        }
+        if (this.userData.user.role === "Официант") {
+          switch (el.label) {
+            case "Обработка заказов":
+              el.visible = true;
+              break;
+            case "Заказы за смену":
+              el.visible = true;
+              break;
+            case "Вход":
+              el.visible = false;
+              break;
+            case "Выход":
+              el.visible = true;
+              break;
+          }
+        }
+        if (this.userData.user.role === "Повар") {
+          switch (el.label) {
+            case "Заказы активной смены":
               el.visible = true;
               break;
             case "Вход":

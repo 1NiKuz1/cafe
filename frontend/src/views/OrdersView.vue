@@ -8,19 +8,27 @@
     class="w-full md:w-14rem add-shift-drop"
   />
   <div class="card-wrapper">
-    <Card v-for="order in orders" :key="order.id" class="order-card">
-      <template #title>{{ order.table }}</template>
-      <template #content>
-        <ul>
-          <li>Официант: {{ order.shift_workers }}</li>
-          <li>Статус: {{ order.status }}</li>
-          <li>Цена: {{ order.price }}</li>
-        </ul>
-      </template>
-      <template #footer>
-        <Button icon="pi pi-cog" label="Edit" />
-      </template>
-    </Card>
+    <template v-if="orders?.length">
+      <Card v-for="order in orders" :key="order.id" class="order-card">
+        <template #title>{{ order.table }}</template>
+        <template #content>
+          <ul>
+            <li>Официант: {{ order.shift_workers }}</li>
+            <li>Статус: {{ order.status }}</li>
+            <li>Цена: {{ order.price }}</li>
+          </ul>
+        </template>
+        <template #footer>
+          <Button icon="pi pi-cog" label="Edit" />
+        </template>
+      </Card>
+    </template>
+    <template v-else-if="!orders"
+      ><p class="order-message">
+        Выберете смену по которой хотите получить информацию.
+      </p></template
+    >
+    <template v-else><p class="order-message">Заказы не найдены.</p></template>
   </div>
   <Toast />
 </template>
@@ -72,7 +80,6 @@ export default {
     loadOrders(id) {
       WorkShiftService.showOrderByWorkShift(id)
         .then((res) => {
-          console.log(res[0].orders);
           this.orders = res[0].orders;
         })
         .catch((err) => {
@@ -113,6 +120,11 @@ ul {
   margin-top: 20px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.order-message {
+  font-size: 18px;
+  font-weight: 500;
 }
 
 @media (max-width: 460px) {
