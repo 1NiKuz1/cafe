@@ -1,18 +1,20 @@
 <template>
-  <Button
-    v-if="!shifts"
-    label="Добавить новую смену"
-    class="add-shift-button"
-    @click="isShowAddNewOrderDialog = true"
-  />
-  <Dropdown
-    name="shifts"
-    v-model="selectedShift"
-    :options="shifts"
-    optionLabel="title"
-    placeholder="Выбор смены"
-    class="w-full md:w-14rem add-shift-drop"
-  />
+  <div class="control-wrapper">
+    <!-- <Dropdown
+      name="shifts"
+      v-model="selectedShift"
+      :options="shift"
+      optionLabel="title"
+      placeholder="Выбор смены"
+      class="w-full md:w-14rem add-shift-drop"
+    /> -->
+    <Button
+      :disabled="!shift"
+      label="Добавить нового заказа"
+      class="add-shift-button"
+      @click="isShowAddNewOrderDialog = true"
+    />
+  </div>
   <div class="card-wrapper">
     <template v-if="orders?.length">
       <Card v-for="order in orders" :key="order.id" class="order-card">
@@ -25,13 +27,13 @@
           </ul>
         </template>
         <template #footer>
-          <Button icon="pi pi-cog" label="Edit" />
+          <Button icon="pi pi-cog" label="Edit" @click="$router.push(`/order/${order.id}`)" />
         </template>
       </Card>
     </template>
     <template v-else-if="!orders"
       ><p class="order-message">
-        Выберете смену по которой хотите получить информацию.
+        Нет активных смен
       </p></template
     >
     <template v-else><p class="order-message">Заказы не найдены.</p></template>
@@ -41,7 +43,7 @@
     modal
     header="Добавление нового заказа"
   >
-    <AddNewWorkShift @addNewOrder="handleAddNewOrder" />
+    <AddNewOrder :idShift="shift.id" @addNewOrder="handleAddNewOrder" />
   </Dialog>
   <Toast />
 </template>
@@ -50,7 +52,9 @@
 import Card from "primevue/card";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
+import Dialog from "primevue/dialog";
 import WorkShiftService from "@/services/workshift.service.js";
+import AddNewOrder from "@/components/AddNewOrder.vue";
 import useShowError from "@/composables/useShowError.js";
 
 export default {
@@ -58,19 +62,20 @@ export default {
     Card,
     Button,
     Dropdown,
+    Dialog,
+    AddNewOrder,
   },
 
   data() {
     return {
       orders: null,
-      shifts: null,
-      selectedShift: null,
-      isShowAddNewOrderDialog,
+      shift: null,
+      isShowAddNewOrderDialog: false,
     };
   },
 
   mounted() {
-    this.loadShifts();
+    this.loadData();
   },
 
   methods: {
@@ -79,17 +84,21 @@ export default {
     },
 
     handleAddNewOrder() {
-      //this.loadShifts();
       this.isShowAddNewOrderDialog = false;
     },
 
+    async loadData() {
+      await this.loadShifts();
+      if (!this.shift) return;
+      await this.loadOrders(this.shift.id);
+    }, 
+
     loadShifts() {
-      WorkShiftService.showAllWorkShifts()
+      return WorkShiftService.showAllWorkShifts()
         .then((res) => {
           res.forEach((el) => {
-            el.title = `Смена ${el.id}`;
+            if (el.active) this.shift = el;
           });
-          this.shifts = res;
         })
         .catch((err) => {
           this.showError(err);
@@ -97,7 +106,7 @@ export default {
     },
 
     loadOrders(id) {
-      WorkShiftService.showOrderByWorkShift(id)
+      return WorkShiftService.showOrderByWorkShift(id)
         .then((res) => {
           this.orders = res[0].orders;
         })
@@ -135,11 +144,22 @@ ul {
   max-width: 250px;
 }
 
-.add-shift-drop {
+.control-wrapper {
+  margin-top: 20px;
+  display: flex;
+  column-gap: 10px;
+  justify-content: center;
+}
+/* .add-shift-drop {
   margin-top: 20px;
   left: 50%;
   transform: translateX(-50%);
 }
+.add-shift-button {
+  margin-top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+} */
 
 .order-message {
   font-size: 18px;

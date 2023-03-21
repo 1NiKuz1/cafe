@@ -47,12 +47,13 @@ class OrderService {
     }
   }
 
-  async changeOrderStatus({ id, status }) {
+  async changeOrderStatus(id, status) {
     try {
       const res = await api.patch(`order/${id}/change-status`, { status });
       return res.data.data;
     } catch (error) {
-      return Promise.reject(error);
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
 }
