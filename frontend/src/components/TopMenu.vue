@@ -36,41 +36,43 @@ export default {
     return {
       menuItems: [
         {
+          name: "employees",
           label: "Сотрудники",
           to: "/employees",
           visible: false,
         },
         {
+          name: "shifts",
           label: "Смены",
           to: "/shifts",
           visible: false,
         },
         {
+          name: "orders",
           label: "Заказы",
           to: "/orders",
           visible: false,
         },
         {
-          label: "Обработка заказов",
+          name: "waiter-orders",
+          label: "Заказы",
           to: "/shift-orders",
           visible: false,
         },
         {
-          label: "Заказы за смену",
-          to: "/orders-for-shift",
-          visible: false,
-        },
-        {
+          name: "cook-orders",
           label: "Заказы активной смены",
           to: "/orders-for-active-shift",
           visible: false,
         },
         {
+          name: "login",
           label: "Вход",
           to: "/login",
           visible: !this.isLogged,
         },
         {
+          name: "logout",
           label: "Выход",
           command: this.logout,
           visible: this.isLogged,
@@ -94,11 +96,11 @@ export default {
     createListMenu() {
       this.menuItems.forEach((el) => {
         if (!this.isLogged) {
-          switch (el.label) {
-            case "Вход":
+          switch (el.name) {
+            case "login":
               el.visible = true;
               break;
-            case "Выход":
+            case "logout":
               el.visible = false;
               break;
             default:
@@ -107,49 +109,46 @@ export default {
           return;
         }
         if (this.userData.user.role === "Администратор") {
-          switch (el.label) {
-            case "Сотрудники":
+          switch (el.name) {
+            case "employees":
               el.visible = true;
               break;
-            case "Смены":
+            case "shifts":
               el.visible = true;
               break;
-            case "Заказы":
+            case "orders":
               el.visible = true;
               break;
-            case "Вход":
+            case "login":
               el.visible = false;
               break;
-            case "Выход":
+            case "logout":
               el.visible = true;
               break;
           }
         }
         if (this.userData.user.role === "Официант") {
-          switch (el.label) {
-            case "Обработка заказов":
+          switch (el.name) {
+            case "waiter-orders":
               el.visible = true;
               break;
-            case "Заказы за смену":
-              el.visible = true;
-              break;
-            case "Вход":
+            case "login":
               el.visible = false;
               break;
-            case "Выход":
+            case "logout":
               el.visible = true;
               break;
           }
         }
         if (this.userData.user.role === "Повар") {
-          switch (el.label) {
-            case "Заказы активной смены":
+          switch (el.name) {
+            case "cook-orders":
               el.visible = true;
               break;
-            case "Вход":
+            case "login":
               el.visible = false;
               break;
-            case "Выход":
+            case "logout":
               el.visible = true;
               break;
           }
