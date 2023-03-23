@@ -36,9 +36,11 @@ class OrderController extends Controller
         $throw = true;
         $user = User::where(['api_token' => $addRequest->bearerToken()])->first();
         $shifts = $user->swiftWorker;
+        $needShift;
         foreach ($shifts as $shift) {
             if ($shift->work_shift_id == $addRequest->work_shift_id) {
                 $throw = false;
+                $needShift = $shift;
             }
         }
 
@@ -48,7 +50,7 @@ class OrderController extends Controller
         return OrderResource::make(Order::create([
             'number_of_person' => $addRequest->number_of_person,
             'table_id' => $addRequest->table_id,
-            'shift_worker_id' => $user->id,
+            'shift_worker_id' => $needShift->id,
             'status_order_id' => 1
         ]));
     }
@@ -107,7 +109,7 @@ class OrderController extends Controller
 
         $userId = $user->id;
         $shiftWorkerId = $order->OrderToUser->id;
-        if ($userId != $shiftWorkerId) {
+        if ($userId != $shiftWorkerId && $userRoleId != 3) {
             throw new ApiException(403, "Forbidden. You did not accept this order!");
         }
 

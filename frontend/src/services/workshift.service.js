@@ -57,6 +57,26 @@ class WorkShiftService {
       return Promise.reject(error?.response?.data?.error ?? error);
     }
   }
+
+  async getTables() {
+    try {
+      const res = await api.get(`/work-shift/tables`);
+      return res.data;
+    } catch (error) {
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
+    }
+  }
+
+  async getMenu() {
+    try {
+      const res = await api.get(`/work-shift/menu`);
+      return res.data;
+    } catch (error) {
+      console.log(error?.response?.data?.error ?? error);
+      return Promise.reject(error?.response?.data?.error ?? error);
+    }
+  }
 }
 
 export default new WorkShiftService();

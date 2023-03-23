@@ -61,8 +61,8 @@ export default {
         },
         {
           name: "cook-orders",
-          label: "Заказы активной смены",
-          to: "/orders-for-active-shift",
+          label: "Заказы",
+          to: "/cook-orders",
           visible: false,
         },
         {

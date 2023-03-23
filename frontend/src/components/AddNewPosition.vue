@@ -1,27 +1,29 @@
 <template>
   <form @submit.prevent class="form-container">
-    <label class="form-label" for="dateStart">Выбор столика</label>
+    <label class="form-label" for="dateStart">Выбор позиции</label>
     <Dropdown
       name="tables"
-      v-model="selectedTable"
-      :options="tables"
+      v-model="selectedMenu"
+      :options="menu"
       optionLabel="name"
-      placeholder="Выбор столика"
+      placeholder="Выбор позиции"
       class="w-full md:w-14rem form-input"
     />
-    <label class="form-label" for="countOfPersons">Количество человек</label>
+    <label class="form-label" for="countOfIngredients"
+      >Количество игредиентов</label
+    >
     <InputNumber
-      name="countOfPersons"
+      name="countOfIngredients"
       class="form-input"
-      v-model="countOfPersons"
+      v-model="countOfIngredients"
       inputId="integeronly"
       :min="1"
-      :max="1000"
+      :max="10"
     />
     <Button
       class="form-button"
       :disabled="isLoading"
-      @click="addNewOrder()"
+      @click="addNewPosition()"
       label="Добавить"
     />
   </form>
@@ -36,10 +38,10 @@ import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
 
 export default {
-  name: "AddNewOrder",
-  emits: ["addNewOrder"],
+  name: "AddNewPosition",
+  emits: ["addNewPosition"],
   props: {
-    idShift: Number,
+    idOrder: Number,
   },
 
   components: {
@@ -53,37 +55,37 @@ export default {
   data() {
     return {
       isLoading: false,
-      countOfPersons: 1,
-      selectedTable: null,
-      tables: null,
+      countOfIngredients: 1,
+      selectedMenu: null,
+      menu: null,
     };
   },
 
   mounted() {
-    this.loadTables();
+    this.loadMenu();
   },
 
   methods: {
-    loadTables() {
-      WorkShiftService.getTables()
+    loadMenu() {
+      WorkShiftService.getMenu()
         .then((res) => {
-          this.tables = res;
+          this.menu = res;
         })
         .catch((err) => {
           this.showError(err);
         });
     },
 
-    async addNewOrder() {
+    async addNewPosition() {
       this.isLoading = true;
       try {
-        if (this.selectedTable) {
-          await OrderService.createOrder(
-            this.idShift,
-            this.selectedTable.id,
-            this.countOfPersons
+        if (this.selectedMenu) {
+          await OrderService.addPositionToOrder(
+            this.idOrder,
+            this.selectedMenu.id,
+            this.countOfIngredients
           );
-          this.$emit("addNewOrder");
+          this.$emit("addNewPosition");
         } else {
           this.showError(new Error("Выберите столик"));
         }

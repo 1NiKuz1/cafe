@@ -10,6 +10,8 @@ use App\Http\Resources\WorkShiftResource;
 use App\Http\Resources\WorkShiftAllResource;
 use App\Models\ShiftWorker;
 use App\Models\WorkShift;
+use App\Models\Menu;
+use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -117,5 +119,15 @@ class WorkShiftController extends Controller
     public function showAll() {
         $workShifts = WorkShift::all();
         return WorkShiftAllResource::collection($workShifts);
+    }
+
+    public function getTables() {
+        $tables = Table::all();
+        return $tables;
+    }
+
+    public function getMenu() {
+        $menu = Menu::all();
+        return $menu;
     }
 }

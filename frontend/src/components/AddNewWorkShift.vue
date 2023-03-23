@@ -1,17 +1,17 @@
 <template>
-  <form @submit.prevent>
-    <label class="from-label" for="dateStart">Дата начала</label>
+  <form @submit.prevent class="form-container">
+    <label class="form-label" for="dateStart">Дата начала</label>
     <Calendar
-      class="from-input"
+      class="form-input"
       name="dateStart"
       v-model="dateStart"
       showTime
       dateFormat="yy-mm-dd"
       hourFormat="24"
     />
-    <label class="from-label" for="dateEnd">Дата окончания</label>
+    <label class="form-label" for="dateEnd">Дата окончания</label>
     <Calendar
-      class="from-input"
+      class="form-input"
       name="dateEnd"
       v-model="dateEnd"
       showTime
@@ -19,7 +19,7 @@
       hourFormat="24"
     />
     <Button
-      class="from-button"
+      class="form-button"
       :disabled="isLoading"
       @click="addNewShift()"
       label="Добавить"
@@ -32,7 +32,7 @@
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 import WorkShiftService from "@/services/workshift.service.js";
-import useShowError from "../composables/useShowError.js";
+import showError from "@/mixins/showError";
 
 export default {
   name: "AddNewWorkShift",
@@ -41,6 +41,9 @@ export default {
     Calendar,
     Button,
   },
+
+  mixins: [showError],
+
   data() {
     return {
       dateStart: null,
@@ -48,10 +51,8 @@ export default {
       isLoading: false,
     };
   },
+
   methods: {
-    showError(err) {
-      useShowError(err, this);
-    },
     async addNewShift() {
       this.isLoading = true;
       try {
@@ -81,19 +82,4 @@ export default {
 };
 </script>
 
-<style scoped>
-form {
-  display: flex;
-  flex-direction: column;
-}
-.from-label {
-  margin-bottom: 5px;
-}
-.from-input {
-  margin-bottom: 10px;
-}
-.from-button {
-  align-self: flex-start;
-  margin-top: 20px;
-}
-</style>
+<style scoped></style>

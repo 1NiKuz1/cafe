@@ -3,3 +3,84 @@
 #app {
   min-width: 320px;
 }
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards {
+  margin: 60px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 1280px;
+  justify-content: center;
+}
+
+.cards__item {
+  flex: 1 0 200px;
+  max-width: 250px;
+}
+
+.cards__item--large {
+  flex: 1 0 280px;
+  max-width: 330px;
+}
+
+.content-wrapper {
+  position: relative;
+  height: 90vh;
+}
+
+.control-wrapper {
+  margin-top: 20px;
+  display: flex;
+  column-gap: 10px;
+  justify-content: center;
+}
+
+.progress-spiner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.default-response {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-error {
+  color: red;
+}
+
+.form-label {
+  margin-bottom: 5px;
+}
+
+.form-input {
+  margin-bottom: 10px;
+}
+
+.form-button {
+  align-self: flex-start;
+  margin-top: 20px;
+}
+
+@media (max-width: 460px) {
+  .cards__item,
+  .cards__item--large {
+    max-width: none;
+  }
+}

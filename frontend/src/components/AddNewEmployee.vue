@@ -64,11 +64,12 @@ import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import FileUpload from "primevue/fileupload";
 import UserService from "@/services/user.service.js";
-import useShowError from "../composables/useShowError.js";
+import showError from "@/mixins/showError";
 
 export default {
   name: "AddNewEmployee",
   emits: ["addNewEmployee"],
+
   components: {
     Field,
     Form,
@@ -77,6 +78,9 @@ export default {
     Dropdown,
     FileUpload,
   },
+
+  mixins: [showError],
+
   data() {
     return {
       isLoading: false,
@@ -88,6 +92,7 @@ export default {
       ],
     };
   },
+
   computed: {
     schema() {
       return yup.object({
@@ -97,10 +102,8 @@ export default {
       });
     },
   },
+
   methods: {
-    showError(err) {
-      useShowError(err, this);
-    },
     async handlSubmit(values) {
       //const photo = this.$refs.imageInput.files[0];
       const role = this.selectedRole.id;
@@ -121,26 +124,9 @@ export default {
 </script>
 
 <style scoped>
-.form-container {
-  display: flex;
-  flex-direction: column;
-}
-
 .form-fields-wrapper {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-}
-.form-error {
-  color: red;
-}
-
-.form-label {
-  margin-bottom: 5px;
-}
-
-.form-button {
-  align-self: flex-start;
-  margin-top: 20px;
 }
 </style>

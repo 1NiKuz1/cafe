@@ -1,6 +1,6 @@
 <template>
-  <form @submit.prevent>
-    <label class="from-label" for="employee">Список сотрудников</label>
+  <form @submit.prevent class="form-container">
+    <label class="form-label" for="employee">Список сотрудников</label>
     <Dropdown
       name="employee"
       v-model="selectedEmployee"
@@ -10,8 +10,8 @@
       class="w-full md:w-14rem"
     />
     <Button
-      class="from-button"
-      :disabled="isLoading || !employees"
+      class="form-button"
+      :disabled="isLoading || !employees.length"
       @click="addEmployeeOnShift()"
       label="Добавить"
       dateFormat="yy/mm/dd"
@@ -23,11 +23,11 @@
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import WorkShiftService from "@/services/workshift.service.js";
-import useShowError from "../composables/useShowError.js";
+import showError from "@/mixins/showError";
 import UserService from "@/services/user.service.js";
 
 export default {
-  name: "AddNewWorkShift",
+  name: "AddNewEmployeeOnWorkShift",
   emits: ["addNewShift"],
   props: {
     idShift: Number,
@@ -36,9 +36,12 @@ export default {
     Dropdown,
     Button,
   },
+
+  mixins: [showError],
+
   data() {
     return {
-      employees: null,
+      employees: [],
       selectedEmployee: null,
       isLoading: false,
     };
@@ -47,10 +50,6 @@ export default {
     this.loadEmployess();
   },
   methods: {
-    showError(err) {
-      useShowError(err, this);
-    },
-
     loadEmployess() {
       UserService.getUsers()
         .then((res) => {
@@ -65,8 +64,7 @@ export default {
       this.isLoading = true;
       try {
         if (!this.selectedEmployee) {
-          this.showError(new Error("Выберете сотрдуника"));
-          this.isLoading = false;
+          this.showError(new Error("Выберите сотрудника"));
           return;
         }
         await WorkShiftService.addUserOnWorkShift(
@@ -82,19 +80,4 @@ export default {
 };
 </script>
 
-<style scoped>
-form {
-  display: flex;
-  flex-direction: column;
-}
-.from-label {
-  margin-bottom: 5px;
-}
-.from-input {
-  margin-bottom: 10px;
-}
-.from-button {
-  align-self: flex-start;
-  margin-top: 20px;
-}
-</style>
+<style scoped></style>

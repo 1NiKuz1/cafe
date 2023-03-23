@@ -40,7 +40,9 @@
 import { Field, Form, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import Button from "primevue/button";
+import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+
 export default {
   components: {
     Field,
@@ -48,6 +50,9 @@ export default {
     ErrorMessage,
     Button,
   },
+
+  mixins: [showError],
+
   setup() {
     const auth = useAuthStore();
     const { login } = auth;
@@ -55,9 +60,13 @@ export default {
       login,
     };
   },
+
   data() {
-    return { serverError: "", isLoading: false };
+    return {
+      isLoading: false,
+    };
   },
+
   computed: {
     schema() {
       return yup.object({
@@ -66,25 +75,16 @@ export default {
       });
     },
   },
+
   methods: {
     async handlSubmit(values) {
       this.isLoading = true;
       try {
         await this.login({ login: values.login, password: values.password });
       } catch (error) {
-        this.serverError = error;
-        this.showError();
+        this.showError(error);
       }
       this.isLoading = false;
-    },
-    showError() {
-      this.$toast.add({
-        severity: "error",
-        summary: "Error message",
-        detail: `Error code: ${this.serverError.code}
-        Message: ${this.serverError.message}`,
-        life: 5000,
-      });
     },
   },
 };

@@ -23,5 +23,4 @@ class WorkShift extends Model
        return $this->hasManyThrough(Order::class, ShiftWorker::class);
     }
 
-
 }

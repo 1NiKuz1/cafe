@@ -1,22 +1,6 @@
 <template>
   <div class="content-wrapper">
-    <div class="control-wrapper">
-      <Dropdown
-        name="shifts"
-        v-model="selectedShift"
-        :options="shifts"
-        optionLabel="title"
-        placeholder="Выбор смены"
-        class="w-full md:w-14rem"
-      />
-    </div>
-
-    <template v-if="!selectedShift"
-      ><p class="default-response">
-        Выберете смену по которой хотите получить информацию.
-      </p></template
-    >
-    <template v-else-if="orders.length">
+    <template v-if="orders.length">
       <div class="cards">
         <Card v-for="order in orders" :key="order.id" class="cards__item">
           <template #title>{{ order.table }}</template>
@@ -24,8 +8,11 @@
             <ul>
               <li>Официант: {{ order.shift_workers }}</li>
               <li>Статус: {{ order.status }}</li>
-              <li>Цена: {{ order.price }}</li>
+              <li>Цена: {{ order.price || "Нет позиций" }}</li>
             </ul>
+          </template>
+          <template #footer>
+            <Button label="Изменить статус" @click="changeStatus(order)" />
           </template>
         </Card>
       </div>
@@ -38,9 +25,8 @@
 <script>
 import Card from "primevue/card";
 import Button from "primevue/button";
-import Dropdown from "primevue/dropdown";
 import ProgressSpinner from "primevue/progressspinner";
-import WorkShiftService from "@/services/workshift.service.js";
+import OrderService from "@/services/order.service.js";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
 
@@ -48,7 +34,6 @@ export default {
   components: {
     Card,
     Button,
-    Dropdown,
     ProgressSpinner,
   },
 
@@ -65,46 +50,43 @@ export default {
   data() {
     return {
       orders: [],
-      shifts: null,
-      selectedShift: null,
     };
   },
 
   mounted() {
-    if (this.userData.user.role != "Администратор") {
+    if (this.userData.user.role != "Повар") {
       this.$router.push("/");
       return;
     }
-    this.loadShifts();
+    this.loadOrders();
   },
 
   methods: {
-    loadShifts() {
-      WorkShiftService.showAllWorkShifts()
-        .then((res) => {
-          res.forEach((el) => {
-            el.title = `Смена ${el.id}`;
+    changeStatus(order) {
+      let status = "";
+      if (order.status == "Принят") status = "preparing";
+      if (order.status == "Готовится") status = "ready";
+      if (status) {
+        OrderService.changeOrderStatus(order.id, status)
+          .then(() => {
+            this.loadOrders();
+          })
+          .catch((err) => {
+            this.showError(err);
           });
-          this.shifts = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
+      } else {
+        this.showError(new Error("Вы не можете изменить статус этого заказа"));
+      }
     },
 
-    loadOrders(id) {
-      WorkShiftService.showOrderByWorkShift(id)
+    loadOrders() {
+      return OrderService.currentOrders()
         .then((res) => {
-          this.orders = res[0].orders;
+          this.orders = res.details;
         })
         .catch((err) => {
           this.showError(err);
         });
-    },
-  },
-  watch: {
-    selectedShift(newVal, oldVal) {
-      this.loadOrders(newVal.id);
     },
   },
 };

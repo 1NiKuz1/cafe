@@ -1,61 +1,70 @@
 <template>
-  <Button
-    v-if="isLoading"
-    label="Добавить новую смену"
-    class="add-shift-button"
-    @click="isShowAddNewShiftDialog = true"
-  />
-  <div class="card-wrapper">
-    <template v-if="isLoading">
-      <Card v-for="shift in shifts" :key="shift.id" class="shift-card">
-        <template #title>{{ shift.title }}</template>
-        <template #content>
-          <ul>
-            <li>Начало смены:</li>
-            <li>{{ shift.start }}</li>
-            <li>Конец смены:</li>
-            <li>{{ shift.end }}</li>
-            <li>Статус: {{ shift.status }}</li>
-          </ul>
-        </template>
-        <template #footer>
-          <Button
-            label="Добавить"
-            style="margin-right: 10px"
-            @click="handleAddEmployeeDialog(shift.id)"
-          />
-          <Button
-            v-if="shift.active"
-            @click="changeStatusWorkShift(shift.id, false)"
-            severity="danger"
-            label="Закрыть"
-          />
-          <Button
-            v-else
-            :disabled="isShiftOpen"
-            @click="changeStatusWorkShift(shift.id, true)"
-            severity="success"
-            label="Открыть"
-          />
-        </template>
-      </Card>
+  <div class="content-wrapper">
+    <div class="control-wrapper">
+      <Button
+        v-if="shifts.length"
+        label="Добавить новую смену"
+        @click="isShowAddNewShiftDialog = true"
+      />
+    </div>
+
+    <template v-if="shifts.length">
+      <div class="cards">
+        <Card
+          v-for="shift in shifts"
+          :key="shift.id"
+          class="cards__item cards__item--large"
+        >
+          <template #title>{{ shift.title }}</template>
+          <template #content>
+            <ul>
+              <li>Начало смены:</li>
+              <li>{{ shift.start }}</li>
+              <li>Конец смены:</li>
+              <li>{{ shift.end }}</li>
+              <li>Статус: {{ shift.status }}</li>
+            </ul>
+          </template>
+          <template #footer>
+            <Button
+              label="Добавить"
+              style="margin-right: 10px"
+              @click="handleAddEmployeeDialog(shift.id)"
+            />
+            <Button
+              v-if="shift.active"
+              @click="changeStatusWorkShift(shift.id, false)"
+              severity="danger"
+              label="Закрыть"
+            />
+            <Button
+              v-else
+              :disabled="isShiftOpen"
+              @click="changeStatusWorkShift(shift.id, true)"
+              severity="success"
+              label="Открыть"
+            />
+          </template>
+        </Card>
+      </div>
     </template>
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
-    <Dialog
-      v-model:visible="isShowAddNewShiftDialog"
-      modal
-      header="Добавление новой смены"
-    >
-      <AddNewWorkShift @addNewShift="handleAddNewShift" />
-    </Dialog>
-    <Dialog
-      v-model:visible="isShowAddNewUserDialog"
-      modal
-      header="Добавление нового пользователя на смену"
-    >
-      <AddEmployeeOnWorkShift :idShift="selectedShift" />
-    </Dialog>
   </div>
+
+  <Dialog
+    v-model:visible="isShowAddNewShiftDialog"
+    modal
+    header="Добавление новой смены"
+  >
+    <AddNewWorkShift @addNewShift="handleAddNewShift" />
+  </Dialog>
+  <Dialog
+    v-model:visible="isShowAddNewUserDialog"
+    modal
+    header="Добавление нового пользователя на смену"
+  >
+    <AddEmployeeOnWorkShift :idShift="selectedShift" />
+  </Dialog>
   <Toast />
 </template>
 
@@ -67,7 +76,7 @@ import Dialog from "primevue/dialog";
 import AddNewWorkShift from "@/components/AddNewWorkShift.vue";
 import AddEmployeeOnWorkShift from "@/components/AddEmployeeOnWorkShift.vue";
 import WorkShiftService from "@/services/workshift.service.js";
-import useShowError from "@/composables/useShowError.js";
+import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
 
 export default {
@@ -79,6 +88,8 @@ export default {
     AddNewWorkShift,
     AddEmployeeOnWorkShift,
   },
+
+  mixins: [showError],
 
   setup() {
     const auth = useAuthStore();
@@ -92,7 +103,6 @@ export default {
     return {
       shifts: [],
       selectedShift: null,
-      isLoading: false,
       isShiftOpen: false,
       isShowAddNewShiftDialog: false,
       isShowAddNewUserDialog: false,
@@ -108,10 +118,6 @@ export default {
   },
 
   methods: {
-    showError(err) {
-      useShowError(err, this);
-    },
-
     handleAddEmployeeDialog(shiftId) {
       this.selectedShift = shiftId;
       this.isShowAddNewUserDialog = true;
@@ -130,7 +136,6 @@ export default {
             el.status = el.active ? "Активна" : "Не активна";
           });
           this.shifts = res;
-          this.isLoading = true;
           this.checkShiftsForOpenness();
         })
         .catch((err) => {
@@ -165,43 +170,4 @@ export default {
 };
 </script>
 
-<style scoped>
-ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.card-wrapper {
-  margin: 60px auto;
-  padding: 0 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  max-width: 1280px;
-  justify-content: center;
-}
-
-.shift-card {
-  flex: 1 0 280px;
-  max-width: 330px;
-}
-
-.progress-spiner {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.add-shift-button {
-  margin-top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-@media (max-width: 620px) {
-  .shift-card {
-    max-width: none;
-  }
-}
-</style>
+<style scoped></style>

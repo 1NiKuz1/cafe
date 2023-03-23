@@ -1,48 +1,61 @@
 <template>
-  <template v-if="order">
-    <Button
-      label="Изменить статус заказа"
-      class="change-status-button"
-      @click="changeStatus"
+  <div class="position-wrapper">
+    <template v-if="order">
+      <div class="control-wrapper">
+        <Button v-if="textChangeStatus" @click="changeStatus"
+          ><span class="p-button-label"
+            >Изменить статус на {{ textChangeStatus }}</span
+          ></Button
+        >
+        <Button
+          v-if="order.status == 'Принят' || order.status == 'Готовится'"
+          label="Добавить позицию"
+          @click="isAddPositionDialog = true"
+        />
+      </div>
+      <div class="order-content-wrapper">
+        <p class="information-order">{{ order.table }}</p>
+        <p class="information-order">Официант: {{ order.shift_workers }}</p>
+        <p class="information-order">Статус: {{ order.status }}</p>
+      </div>
+      <div class="card-wrapper">
+        <Card
+          v-for="position of order.positions"
+          :key="position.id"
+          class="cards__item cards__item--large"
+        >
+          <template #title>Позиция {{ position.id }}</template>
+          <template #content>
+            <ul>
+              <li>Позиция: {{ position.position }}</li>
+              <li>Количество: {{ position.count }}</li>
+              <li>Количество: {{ position.price }}</li>
+            </ul>
+          </template>
+          <template #footer>
+            <Button
+              v-if="order.status == 'Принят'"
+              label="Удалить"
+              @click="delPosition(order.id, position.id)"
+            />
+          </template>
+        </Card>
+      </div>
+      <div class="control-wrapepr"></div>
+    </template>
+    <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
+  </div>
+  <Dialog
+    v-model:visible="isAddPositionDialog"
+    modal
+    header="Добавление новой позиции"
+  >
+    <AddNewPosition
+      :idOrder="+orderId"
+      @addNewPosition="handleAddNewPosition"
     />
-    <div class="content-wrapper">
-      <p class="information-order">{{ order.table }}</p>
-      <p class="information-order">Официант: {{ order.shift_workers }}</p>
-      <p class="information-order">Статус: {{ order.status }}</p>
-    </div>
-    <div class="card-wrapper">
-      <Card
-        v-for="position of order.positions"
-        :key="position.id"
-        class="position-card"
-      >
-        <template #title>Позиция {{ position.id}}</template>
-        <template #content>
-          <ul>
-            <li>Позиция: {{ position.position }}</li>
-            <li>Количество: {{ position.count }}</li>
-            <li>Количество: {{ position.price }}</li>
-          </ul>
-        </template>
-        <template #footer>
-          <div class="button-wrapper">
-            <Button
-              label="Добавить позицию"
-              @click=""
-            />
-            <Button
-              label="Удалить позицию"
-              @click=""
-            />
-          </div>
-        </template>
-      </Card>
-    </div>
-    <div class="control-wrapepr">
-      
-    </div>
-  </template>
-  <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
+  </Dialog>
+  <Toast />
 </template>
 
 <script>
@@ -51,9 +64,10 @@ import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import Dialog from "primevue/dialog";
 import ProgressSpinner from "primevue/progressspinner";
-import WorkShiftService from "@/services/workshift.service.js";
 import OrderService from "@/services/order.service.js";
-import useShowError from "@/composables/useShowError.js";
+import AddNewPosition from "@/components/AddNewPosition.vue";
+import showError from "@/mixins/showError";
+import { useAuthStore } from "@/stores/auth";
 
 export default {
   components: {
@@ -61,45 +75,83 @@ export default {
     Button,
     Dropdown,
     Dialog,
-    ProgressSpinner
+    ProgressSpinner,
+    AddNewPosition,
+  },
+
+  mixins: [showError],
+
+  setup() {
+    const auth = useAuthStore();
+    const { userData } = auth;
+    return {
+      userData,
+    };
   },
 
   data() {
     return {
       orderId: this.$route.params.id,
       order: null,
+      textChangeStatus: null,
+      isAddPositionDialog: false,
     };
   },
 
   mounted() {
+    if (this.userData.user.role != "Официант") {
+      this.$router.push("/");
+      return;
+    }
     this.loadOrder();
   },
 
   methods: {
-    showError(err) {
-      useShowError(err, this);
+    loadOrder() {
+      return OrderService.showOrder(this.orderId)
+        .then((res) => {
+          this.order = res.details[0];
+          this.textChangeStatus =
+            this.order.status == "Принят"
+              ? "Отменить"
+              : this.order.status == "Готов"
+              ? "Оплачен"
+              : null;
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
     },
 
-    loadOrder() {
-      OrderService.showOrder(this.orderId).then(res => {
-        this.order = res.details[0];
-      }).catch(err => {
-        showError(err);
-      })
+    async handleAddNewPosition() {
+      await this.loadOrder();
+      this.isAddPositionDialog = false;
+    },
+
+    delPosition(idOrder, idPosition) {
+      OrderService.delPositionToOrder(idOrder, idPosition)
+        .then((res) => {
+          this.loadOrder();
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
     },
 
     changeStatus() {
       let status = "";
-      if (this.order.status == "Принят") status = "canceled"
-      if (this.order.status == "Готов") status = "paid-up"
+      if (this.order.status == "Принят") status = "canceled";
+      if (this.order.status == "Готов") status = "paid-up";
       if (status) {
-        OrderService.changeOrderStatus(this.orderId, status).then(() => {
-          this.loadOrder();
-        }).catch(err => {
-          this.showError(err);
-        })
+        OrderService.changeOrderStatus(this.orderId, status)
+          .then(() => {
+            this.loadOrder();
+          })
+          .catch((err) => {
+            this.showError(err);
+          });
       } else {
-        this.showError(new Error("Проблема со статусом заказа"));
+        this.showError(new Error("Вы не можете изменить статус этого заказа"));
       }
     },
   },
@@ -107,14 +159,9 @@ export default {
 </script>
 
 <style scoped>
-ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-p {
- margin-bottom: 0;
+.order-content-wrapper {
+  margin-top: 20px;
+  padding: 0 20px;
 }
 
 .card-wrapper {
@@ -134,42 +181,16 @@ p {
   font-weight: 600;
 }
 
-.progress-spiner {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.position-card {
-  flex: 1 0 280px;
-  max-width: 330px;
-}
-
-.change-status-button {
-  margin-top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.content-wrapper {
+.position-wrapper {
   max-width: 1280px;
-  margin: 60px auto;
+  margin: 0 auto;
   padding: 0 20px;
-}
-
-.button-wrapper {
-  margin-top: auto;
-  display: flex;
-  gap: 5px;
+  position: relative;
+  height: 90vh;
 }
 
 @media (max-width: 620px) {
-  .position-card {
-    max-width: none;
-  }
-
-  .content-wrapper {
+  .position-wrapper {
     max-width: none;
   }
 }

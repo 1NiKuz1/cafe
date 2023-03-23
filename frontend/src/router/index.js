@@ -5,6 +5,7 @@ import LoginView from "../views/LoginView.vue";
 import OrdersView from "../views/OrdersView.vue";
 import ShiftsView from "../views/ShiftsView.vue";
 import WaiterOrdersView from "../views/WaiterOrdersView.vue";
+import CookOrdersView from "../views/CookOrdersView.vue";
 import SelectedOrderView from "../views/SelectedOrderView.vue";
 
 const router = createRouter({
@@ -34,6 +35,11 @@ const router = createRouter({
       path: "/shift-orders",
       name: "shift-orders",
       component: WaiterOrdersView,
+    },
+    {
+      path: "/cook-orders",
+      name: "cook-orders",
+      component: CookOrdersView,
     },
     {
       path: "/order/:id",

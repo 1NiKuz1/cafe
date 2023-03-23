@@ -35,6 +35,10 @@ Route::prefix('work-shift')->group(function() {
         Route::get('/{workShift}/close', [WorkShiftController::class, "closeWorkShift"]);
         Route::post('/{workShift}/user', [WorkShiftController::class, "addUser"]);
     });
+    Route::middleware('role:waiter')->group(function() {
+        Route::get('/tables', [WorkShiftController::class, "getTables"]);
+        Route::get('/menu', [WorkShiftController::class, "getMenu"]);
+    });
     Route::middleware('role:admin|waiter')->group(function() {
         Route::get('/{workShift}/order', [WorkShiftController::class, "show"]);
         Route::get('/', [WorkShiftController::class, "showAll"]);
