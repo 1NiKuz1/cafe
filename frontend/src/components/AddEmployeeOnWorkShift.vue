@@ -24,7 +24,8 @@ import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
-import UserService from "@/services/user.service.js";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   name: "AddNewEmployeeOnWorkShift",
@@ -39,27 +40,32 @@ export default {
 
   mixins: [showError],
 
+  setup() {
+    const data = useDataStore();
+    const { employees } = storeToRefs(data);
+    const { getUsers } = data;
+    return {
+      getUsers,
+      employees,
+    };
+  },
+
   data() {
     return {
-      employees: [],
       selectedEmployee: null,
       isLoading: false,
     };
   },
-  mounted() {
-    this.loadEmployess();
-  },
-  methods: {
-    loadEmployess() {
-      UserService.getUsers()
-        .then((res) => {
-          this.employees = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
 
+  mounted() {
+    if (!this.employees.length) {
+      this.getUsers().catch((err) => {
+        this.showError(err);
+      });
+    }
+  },
+
+  methods: {
     async addEmployeeOnShift() {
       this.isLoading = true;
       try {
@@ -67,6 +73,7 @@ export default {
           this.showError(new Error("Выберите сотрудника"));
           return;
         }
+        //Adding a new employee to the shift
         await WorkShiftService.addUserOnWorkShift(
           this.idShift,
           this.selectedEmployee.id

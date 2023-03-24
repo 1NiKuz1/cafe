@@ -36,6 +36,8 @@ import Dropdown from "primevue/dropdown";
 import OrderService from "@/services/order.service.js";
 import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   name: "AddNewPosition",
@@ -52,34 +54,38 @@ export default {
 
   mixins: [showError],
 
+  setup() {
+    const data = useDataStore();
+    const { menu } = storeToRefs(data);
+    const { getMenu } = data;
+    return {
+      getMenu,
+      menu,
+    };
+  },
+
   data() {
     return {
       isLoading: false,
       countOfIngredients: 1,
       selectedMenu: null,
-      menu: null,
     };
   },
 
   mounted() {
-    this.loadMenu();
+    if (!this.menu.length) {
+      this.getMenu().catch((err) => {
+        this.showError(err);
+      });
+    }
   },
 
   methods: {
-    loadMenu() {
-      WorkShiftService.getMenu()
-        .then((res) => {
-          this.menu = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
-
     async addNewPosition() {
       this.isLoading = true;
       try {
         if (this.selectedMenu) {
+          //Adding new position to the order
           await OrderService.addPositionToOrder(
             this.idOrder,
             this.selectedMenu.id,

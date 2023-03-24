@@ -1,5 +1,6 @@
 <template>
   <div class="content-wrapper">
+    <!--If there are orders show them-->
     <template v-if="orders.length">
       <div class="cards">
         <Card v-for="order in orders" :key="order.id" class="cards__item">
@@ -17,6 +18,7 @@
         </Card>
       </div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
   <Toast />
@@ -29,6 +31,8 @@ import ProgressSpinner from "primevue/progressspinner";
 import OrderService from "@/services/order.service.js";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   components: {
@@ -41,15 +45,14 @@ export default {
 
   setup() {
     const auth = useAuthStore();
+    const data = useDataStore();
+    const { ordersForCook } = storeToRefs(data);
+    const { getOrdersForCook } = data;
     const { userData } = auth;
     return {
       userData,
-    };
-  },
-
-  data() {
-    return {
-      orders: [],
+      orders: ordersForCook,
+      getOrdersForCook,
     };
   },
 
@@ -58,7 +61,11 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadOrders();
+    if (!this.orders.length) {
+      this.getOrdersForCook().catch((err) => {
+        this.showError(err);
+      });
+    }
   },
 
   methods: {
@@ -67,9 +74,12 @@ export default {
       if (order.status == "Принят") status = "preparing";
       if (order.status == "Готовится") status = "ready";
       if (status) {
+        //Changing the order status
         OrderService.changeOrderStatus(order.id, status)
           .then(() => {
-            this.loadOrders();
+            this.getOrdersForCook().catch((err) => {
+              this.showError(err);
+            });
           })
           .catch((err) => {
             this.showError(err);
@@ -77,16 +87,6 @@ export default {
       } else {
         this.showError(new Error("Вы не можете изменить статус этого заказа"));
       }
-    },
-
-    loadOrders() {
-      return OrderService.currentOrders()
-        .then((res) => {
-          this.orders = res.details;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
     },
   },
 };

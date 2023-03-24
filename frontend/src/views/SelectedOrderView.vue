@@ -1,5 +1,6 @@
 <template>
   <div class="position-wrapper">
+    <!--If the order is received-->
     <template v-if="order">
       <div class="control-wrapper">
         <Button v-if="textChangeStatus" @click="changeStatus"
@@ -13,18 +14,20 @@
           @click="isAddPositionDialog = true"
         />
       </div>
+
       <div class="order-content-wrapper">
         <p class="information-order">{{ order.table }}</p>
         <p class="information-order">Официант: {{ order.shift_workers }}</p>
         <p class="information-order">Статус: {{ order.status }}</p>
       </div>
+
       <div class="card-wrapper">
         <Card
-          v-for="position of order.positions"
+          v-for="(position, index) in order.positions"
           :key="position.id"
           class="cards__item cards__item--large"
         >
-          <template #title>Позиция {{ position.id }}</template>
+          <template #title>Позиция {{ index + 1 }}</template>
           <template #content>
             <ul>
               <li>Позиция: {{ position.position }}</li>
@@ -41,8 +44,8 @@
           </template>
         </Card>
       </div>
-      <div class="control-wrapepr"></div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
   <Dialog
@@ -108,6 +111,7 @@ export default {
 
   methods: {
     loadOrder() {
+      //Receiving an order
       return OrderService.showOrder(this.orderId)
         .then((res) => {
           this.order = res.details[0];
@@ -124,6 +128,7 @@ export default {
     },
 
     async handleAddNewPosition() {
+      //Handling the event of adding a new position
       await this.loadOrder();
       this.isAddPositionDialog = false;
     },
@@ -143,6 +148,7 @@ export default {
       if (this.order.status == "Принят") status = "canceled";
       if (this.order.status == "Готов") status = "paid-up";
       if (status) {
+        //Changing the order status
         OrderService.changeOrderStatus(this.orderId, status)
           .then(() => {
             this.loadOrder();

@@ -7,9 +7,11 @@
         @click="isShowAddNewOrderDialog = true"
       />
     </div>
+    <!--If there is an active shift-->
     <template v-if="!shift"
       ><p class="default-response">Нет активных смен</p></template
     >
+    <!--If there are orders show them-->
     <template v-else-if="orders.length">
       <div class="cards">
         <Card v-for="order in orders" :key="order.id" class="cards__item">
@@ -31,6 +33,7 @@
         </Card>
       </div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
 
@@ -49,11 +52,12 @@ import Card from "primevue/card";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import Dialog from "primevue/dialog";
-import WorkShiftService from "@/services/workshift.service.js";
 import AddNewOrder from "@/components/AddNewOrder.vue";
 import ProgressSpinner from "primevue/progressspinner";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   components: {
@@ -69,15 +73,21 @@ export default {
 
   setup() {
     const auth = useAuthStore();
+    const data = useDataStore();
+    const { shifts, orders } = storeToRefs(data);
+    const { getWorkShifts, getOrdersById } = data;
     const { userData } = auth;
     return {
       userData,
+      shifts,
+      orders,
+      getWorkShifts,
+      getOrdersById,
     };
   },
 
   data() {
     return {
-      orders: [],
       shift: null,
       isShowAddNewOrderDialog: false,
     };
@@ -88,46 +98,38 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadData();
+    if (!this.orders.length) {
+      this.loadData();
+    } else {
+      this.findActiveShift();
+    }
   },
 
   methods: {
-    async handleAddNewOrder() {
-      await this.loadOrders(this.shift.id);
-      this.isShowAddNewOrderDialog = false;
+    handleAddNewOrder() {
+      //Handling the event of adding a new order
+      this.getOrdersById(this.shift.id)
+        .catch((err) => {
+          this.showError(err);
+        })
+        .finally(() => {
+          this.isShowAddNewOrderDialog = false;
+        });
     },
 
     async loadData() {
-      await this.loadShifts();
-      if (!this.shift) return;
-      await this.loadOrders(this.shift.id);
+      try {
+        if (!this.shifts.length) await this.getWorkShifts();
+        this.findActiveShift();
+        if (!this.shift) return;
+        await this.getOrdersById(this.shift.id);
+      } catch (error) {
+        this.showError(error);
+      }
     },
 
-    loadShifts() {
-      return WorkShiftService.showAllWorkShifts()
-        .then((res) => {
-          res.forEach((el) => {
-            if (el.active) this.shift = el;
-          });
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
-
-    loadOrders(id) {
-      return WorkShiftService.showOrderByWorkShift(id)
-        .then((res) => {
-          this.orders = res[0].orders;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
-  },
-  watch: {
-    selectedShift(newVal, oldVal) {
-      this.loadOrders(newVal.id);
+    findActiveShift() {
+      this.shift = this.shifts.find((el) => el.active);
     },
   },
 };

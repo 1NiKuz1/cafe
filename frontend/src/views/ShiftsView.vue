@@ -7,7 +7,7 @@
         @click="isShowAddNewShiftDialog = true"
       />
     </div>
-
+    <!--If there are shifts show them-->
     <template v-if="shifts.length">
       <div class="cards">
         <Card
@@ -15,16 +15,18 @@
           :key="shift.id"
           class="cards__item cards__item--large"
         >
-          <template #title>{{ shift.title }}</template>
+          <template #title>Смена {{ shift.id }}</template>
+
           <template #content>
             <ul>
               <li>Начало смены:</li>
               <li>{{ shift.start }}</li>
               <li>Конец смены:</li>
               <li>{{ shift.end }}</li>
-              <li>Статус: {{ shift.status }}</li>
+              <li>Статус: {{ shift.active ? "Активна" : "Не активна" }}</li>
             </ul>
           </template>
+
           <template #footer>
             <Button
               label="Добавить"
@@ -48,7 +50,9 @@
         </Card>
       </div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
+    <Toast />
   </div>
 
   <Dialog
@@ -78,6 +82,8 @@ import AddEmployeeOnWorkShift from "@/components/AddEmployeeOnWorkShift.vue";
 import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   components: {
@@ -93,15 +99,19 @@ export default {
 
   setup() {
     const auth = useAuthStore();
+    const data = useDataStore();
+    const { shifts } = storeToRefs(data);
+    const { getWorkShifts } = data;
     const { userData } = auth;
     return {
       userData,
+      shifts,
+      getWorkShifts,
     };
   },
 
   data() {
     return {
-      shifts: [],
       selectedShift: null,
       isShiftOpen: false,
       isShowAddNewShiftDialog: false,
@@ -114,7 +124,15 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadShifts();
+    if (!this.shifts.length) {
+      this.getWorkShifts()
+        .then(() => {
+          this.checkShiftsForOpenness();
+        })
+        .catch((err) => {
+          this.showError(err);
+        });
+    }
   },
 
   methods: {
@@ -124,27 +142,20 @@ export default {
     },
 
     handleAddNewShift() {
-      this.loadShifts();
-      this.isShowAddNewShiftDialog = false;
-    },
-
-    loadShifts() {
-      WorkShiftService.showAllWorkShifts()
-        .then((res) => {
-          res.forEach((el) => {
-            el.title = `Смена ${el.id}`;
-            el.status = el.active ? "Активна" : "Не активна";
-          });
-          this.shifts = res;
+      //Handling the event of adding a new shift
+      this.getWorkShifts()
+        .then(() => {
           this.checkShiftsForOpenness();
         })
         .catch((err) => {
           this.showError(err);
         });
+      this.isShowAddNewShiftDialog = false;
     },
 
     async changeStatusWorkShift(id, status) {
       try {
+        //Changing the shift status
         if (status) await WorkShiftService.openWorkShift(id);
         else await WorkShiftService.closeWorkShift(id);
         this.shifts.forEach((el) => {

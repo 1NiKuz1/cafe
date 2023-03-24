@@ -80,6 +80,7 @@ export default {
     async handlSubmit(values) {
       this.isLoading = true;
       try {
+        //User authorization
         await this.login({ login: values.login, password: values.password });
       } catch (error) {
         this.showError(error);
@@ -116,10 +117,6 @@ export default {
   padding: 0.4rem 0.75rem;
   align-self: stretch;
 }
-.form-error {
-  color: red;
-}
-
 .p-button {
   margin-top: 10px;
   padding: 0.4rem 1.25rem;

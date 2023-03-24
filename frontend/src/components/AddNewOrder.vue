@@ -32,8 +32,9 @@ import Button from "primevue/button";
 import InputNumber from "primevue/inputnumber";
 import Dropdown from "primevue/dropdown";
 import OrderService from "@/services/order.service.js";
-import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   name: "AddNewOrder",
@@ -50,34 +51,38 @@ export default {
 
   mixins: [showError],
 
+  setup() {
+    const data = useDataStore();
+    const { tables } = storeToRefs(data);
+    const { getTables } = data;
+    return {
+      getTables,
+      tables,
+    };
+  },
+
   data() {
     return {
       isLoading: false,
       countOfPersons: 1,
       selectedTable: null,
-      tables: null,
     };
   },
 
   mounted() {
-    this.loadTables();
+    if (!this.tables.length) {
+      this.getTables().catch((err) => {
+        this.showError(err);
+      });
+    }
   },
 
   methods: {
-    loadTables() {
-      WorkShiftService.getTables()
-        .then((res) => {
-          this.tables = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
-
     async addNewOrder() {
       this.isLoading = true;
       try {
         if (this.selectedTable) {
+          //Creating a new order
           await OrderService.createOrder(
             this.idShift,
             this.selectedTable.id,

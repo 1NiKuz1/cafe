@@ -7,6 +7,7 @@
         @click="isShowAddNewUserDialog = true"
       />
     </div>
+    <!--If there are employees show them-->
     <template v-if="employees.length">
       <div class="cards">
         <Card
@@ -24,6 +25,7 @@
         </Card>
       </div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
   <Dialog
@@ -42,9 +44,10 @@ import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 import Dialog from "primevue/dialog";
 import AddNewEmployee from "@/components/AddNewEmployee.vue";
-import UserService from "@/services/user.service.js";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   components: {
@@ -59,15 +62,20 @@ export default {
 
   setup() {
     const auth = useAuthStore();
+    const data = useDataStore();
+    const { employees } = storeToRefs(data);
+    const { getUsers } = data;
     const { userData } = auth;
     return {
       userData,
+      getUsers,
+      employees,
     };
   },
 
   data() {
     return {
-      employees: [],
+      isLoading: false,
       isShowAddNewUserDialog: false,
     };
   },
@@ -77,26 +85,20 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadEmployess();
+    if (!this.employees.length) {
+      this.getUsers().catch((err) => {
+        this.showError(err);
+      });
+    }
   },
 
   methods: {
     handleAddNewEmployee() {
+      //Handling the event of adding a new user
       this.getUsers().catch((err) => {
         this.showError(err);
       });
-      this.loadEmployess();
       this.isShowAddNewUserDialog = false;
-    },
-
-    loadEmployess() {
-      UserService.getUsers()
-        .then((res) => {
-          this.employees = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
     },
   },
 };

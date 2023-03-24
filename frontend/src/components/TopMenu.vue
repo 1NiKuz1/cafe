@@ -12,6 +12,7 @@
 import MegaMenu from "primevue/megamenu";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
+import { useDataStore } from "@/stores/data";
 
 export default {
   name: "TopMenu",
@@ -21,6 +22,7 @@ export default {
 
   setup() {
     const auth = useAuthStore();
+    const data = useDataStore();
     const { userData } = auth;
     const { isLogged } = storeToRefs(auth);
     const { logout } = auth;
@@ -29,6 +31,7 @@ export default {
       isLogged,
       logout,
       userData,
+      data,
     };
   },
 
@@ -74,7 +77,7 @@ export default {
         {
           name: "logout",
           label: "Выход",
-          command: this.logout,
+          command: this.logoutWithReset,
           visible: this.isLogged,
         },
       ],
@@ -93,6 +96,11 @@ export default {
   },
 
   methods: {
+    async logoutWithReset() {
+      await this.logout();
+      this.data.$reset();
+    },
+
     createListMenu() {
       this.menuItems.forEach((el) => {
         if (!this.isLogged) {

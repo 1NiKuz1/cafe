@@ -112,6 +112,7 @@ export default {
       values.role_id = role;
       this.isLoading = true;
       try {
+        //Creating a new user
         await UserService.createUser(values);
         this.$emit("addNewEmployee");
       } catch (error) {

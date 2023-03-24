@@ -4,18 +4,19 @@
       <Dropdown
         name="shifts"
         v-model="selectedShift"
-        :options="shifts"
+        :options="ShiftsForDrop"
         optionLabel="title"
         placeholder="Выбор смены"
         class="w-full md:w-14rem"
       />
     </div>
-
+    <!--If no shift is selected-->
     <template v-if="!selectedShift"
       ><p class="default-response">
         Выберете смену по которой хотите получить информацию.
       </p></template
     >
+    <!--If there are orders show them-->
     <template v-else-if="orders.length">
       <div class="cards">
         <Card v-for="order in orders" :key="order.id" class="cards__item">
@@ -30,6 +31,7 @@
         </Card>
       </div>
     </template>
+    <!--Else show the ProgressSpinner-->
     <ProgressSpinner v-else ria-label="Loading" class="progress-spiner" />
   </div>
   <Toast />
@@ -40,9 +42,10 @@ import Card from "primevue/card";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import ProgressSpinner from "primevue/progressspinner";
-import WorkShiftService from "@/services/workshift.service.js";
 import showError from "@/mixins/showError";
 import { useAuthStore } from "@/stores/auth";
+import { useDataStore } from "@/stores/data";
+import { storeToRefs } from "pinia";
 
 export default {
   components: {
@@ -57,16 +60,16 @@ export default {
   setup() {
     const auth = useAuthStore();
     const { userData } = auth;
+    const data = useDataStore();
+    const { shifts, orders, selectedShift } = storeToRefs(data);
+    const { getWorkShifts, getOrdersById } = data;
     return {
       userData,
-    };
-  },
-
-  data() {
-    return {
-      orders: [],
-      shifts: null,
-      selectedShift: null,
+      shifts,
+      orders,
+      selectedShift,
+      getWorkShifts,
+      getOrdersById,
     };
   },
 
@@ -75,36 +78,26 @@ export default {
       this.$router.push("/");
       return;
     }
-    this.loadShifts();
+    if (!this.shifts.length) {
+      this.getWorkShifts().catch((err) => {
+        this.showError(err);
+      });
+    }
   },
 
-  methods: {
-    loadShifts() {
-      WorkShiftService.showAllWorkShifts()
-        .then((res) => {
-          res.forEach((el) => {
-            el.title = `Смена ${el.id}`;
-          });
-          this.shifts = res;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
-    },
-
-    loadOrders(id) {
-      WorkShiftService.showOrderByWorkShift(id)
-        .then((res) => {
-          this.orders = res[0].orders;
-        })
-        .catch((err) => {
-          this.showError(err);
-        });
+  computed: {
+    ShiftsForDrop() {
+      return this.shifts.map((el) => {
+        return { id: el.id, title: `Смена ${el.id}` };
+      });
     },
   },
+
   watch: {
-    selectedShift(newVal, oldVal) {
-      this.loadOrders(newVal.id);
+    selectedShift(newVal) {
+      this.getOrdersById(newVal.id).catch((err) => {
+        this.showError(err);
+      });
     },
   },
 };

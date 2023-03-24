@@ -57,6 +57,7 @@ export default {
       this.isLoading = true;
       try {
         if (this.dateStart && this.dateEnd) {
+          //Creating a new shift
           await WorkShiftService.createWorkShift({
             start: `${this.dateStart.getFullYear()}-${
               this.dateStart.getMonth() > 8
